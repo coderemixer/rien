@@ -1,0 +1,6 @@
+#!/bin/ruby
+
+require 'optparse'
+require 'rien'
+
+puts 'Hello World'
