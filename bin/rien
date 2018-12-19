@@ -3,4 +3,36 @@
 require 'optparse'
 require 'rien'
 
-puts 'Hello World'
+options = {
+  mode: :help
+}
+
+parser = OptionParser.new do |opts|
+  opts.banner = 'Usage: rien [options]'
+  opts.on('-e', '--encode [FILE]', 'Encode specific ruby file', String) do |v|
+    options[:mode] = :encode
+    options[:file] = v
+  end
+
+  # opts.on('-p', '--pack [FILE]', 'Pack ruby file and all relative requirements into a single executable', String) do |v|
+  #   options[:mode] = :pack
+  #   options[:file] = v
+  # end
+end
+
+parser.parse!
+
+case options[:mode]
+when :encode
+  encoder = Rien::Encoder.new
+  bytes = encoder.encode_file(options[:v])
+
+  puts bytes
+  puts encoder.generate('wat')
+
+  puts __FILE__
+when :help
+  puts parser
+else
+  puts parser
+end
