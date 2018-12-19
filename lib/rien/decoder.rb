@@ -3,5 +3,10 @@ class Rien::Decoder
     version == RUBY_VERSION
   end
 
-  # def self.eval(filename)
+  def self.eval(filename)
+    file = File.read(filename)
+    ir_bin = Zlib::Inflate.inflate(file)
+    ir = RubyVM::InstructionSequence.load_from_binary(ir_bin)
+    ir.eval
+  end
 end

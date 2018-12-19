@@ -8,13 +8,17 @@ class Rien::Encoder
     Zlib::Deflate.deflate(bytecode.to_binary)
   end
 
-  def generate(path)
+  def bootstrap(path)
     <<-EOL
+require 'rien'
+
 Rien::Decoder.check_version('#{RUBY_VERSION}')
 Rien::Decoder.eval('#{path}.rien')
     EOL
   end
 
   def encode_file(filepath)
+    src = File.read(filepath)
+    self.encode(src)
   end
 end

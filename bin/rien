@@ -25,12 +25,17 @@ parser.parse!
 case options[:mode]
 when :encode
   encoder = Rien::Encoder.new
-  bytes = encoder.encode_file(options[:v])
+  bytes = encoder.encode_file(options[:file])
+  generated_name = "#{options[:file]}.encoded.rb"
+  bootstrap = encoder.bootstrap(generated_name)
 
-  puts bytes
-  puts encoder.generate('wat')
+  File.open(generated_name, 'w') do |f|
+    f.write bootstrap
+  end
 
-  puts __FILE__
+  File.open("#{generated_name}.rien", 'wb') do |f|
+    f.write bytes
+  end
 when :help
   puts parser
 else
