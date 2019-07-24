@@ -8,12 +8,12 @@ class Rien::Encoder
     Zlib::Deflate.deflate(bytecode.to_binary)
   end
 
-  def bootstrap(path)
+  def bootstrap
     <<-EOL
 require 'rien'
 
-Rien::Decoder.check_version('#{RUBY_VERSION}')
-Rien::Decoder.eval('#{path}.rien')
+Rien::Decoder.check_version!('#{RUBY_VERSION}')
+Rien::Decoder.eval("\#{__FILE__}.rbc")
     EOL
   end
 
