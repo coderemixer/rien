@@ -1,6 +1,6 @@
-require "fileutils"
+require "optparse"
 require "ruby-progressbar"
-require "thor"
+require "fileutils"
 
 module Rien::CliHelper
   class CliHelperStatus
@@ -88,7 +88,11 @@ module Rien::CliHelper
   end
 
   private def pack_all_files_in_directory(source, output)
-    FileUtils.cp_r "#{source}/.", output
+    begin
+      FileUtils.cp_r "#{source}/.", output
+    rescue Exception => e
+      abort("\nFailed to access #{output}, reason: #{e.message}".red)
+    end
     files = Dir["#{output}/**/*.rb"] # pack all files
     pack_files(files)
     puts "Successed to compile and pack #{source} into #{output}\ntotal #{files.length} file(s)".green
@@ -115,53 +119,67 @@ module Rien::CliHelper
   end
 end
 
-class Rien::Cli < Thor
+class Rien::Cli
   include Rien::CliHelper
 
-  # rien encode
-  desc "encode [FILE]", "Encode specific ruby file"
-  method_option :output,
-                :aliases => "-o",
-                :default => "output.rb",
-                :desc => "Indicate the output of the encoded file(s)"
-  method_option :silent,
-                :aliases => "-s",
-                :type => :boolean,
-                :default => false,
-                :desc => "Suppress all prompts asking for user input"
+  def initialize
+    @options = {
+      mode: :help,
+    }
 
-  def encode_single_file(source)
-    output = options[:output]
-    status.silent = options[:silent]
-    export_single_encoded(source, output)
-    puts "Successed to compile #{source} into #{output} and #{output}.rbc".green
+    @parser = OptionParser.new do |opts|
+      opts.banner = "Usage: rien [options]"
+      opts.on("-e", "--encode [FILE]", "Encode specific ruby file", String) do |v|
+        @options[:mode] = :encode
+        @options[:file] = v
+        @options[:output] ||= "output.rb"
+      end
+
+      opts.on("-p", "--pack [DIR]", "Pack ruby directory into encoded files", String) do |v|
+        @options[:mode] = :pack
+        @options[:file] = v
+        @options[:output] ||= "rien_output"
+      end
+
+      opts.on("-o", "--out [FILE/DIR]", "Indicate the output of the encoded file(s)", String) do |v|
+        @options[:output] = v
+      end
+
+      opts.on("-u", "--use-rienfile", "Use Rienfile to configure, override other options", String) do
+        @options[:rienfile] = true
+      end
+
+      opts.on("-s", "--silent-mode", "Suppress all prompts asking for user input", String) do
+        @options[:silent] = true
+      end
+    end
   end
 
-  # rien pack
-  desc "pack [DIR]", "Pack ruby directory into encoded files"
-  method_option :output,
-                :aliases => "-o",
-                :default => "rine_output",
-                :desc => "Indicate the output of the encoded file(s)"
-  method_option :rienfile,
-                :aliases => "-r",
-                :type => :boolean,
-                :default => false,
-                :desc => "Use Rienfile to configure, override all other options"
-  method_option :silent,
-                :aliases => "-s",
-                :type => :boolean,
-                :default => false,
-                :desc => "Suppress all prompts asking for user input"
+  def start
+    @parser.parse!
+    case @options[:mode]
+    when :encode
+      source = @options[:file]
+      output = @options[:output]
+      status.silent = @options[:silent]
+      export_single_encoded(source, output)
+      puts "Successed to compile #{source} into #{output} and #{output}.rbc".green
+    when :pack
+      source = @options[:file]
+      abort("\nOnly directory can be packed".red) unless File.directory?(source)
 
-  def pack_files_in_directory(source)
-    use_rienfile = options[:rienfile]
-    if use_rienfile
-      use_rienfile_to_pack(source)
+      use_rienfile = @options[:rienfile]
+      if use_rienfile
+        use_rienfile_to_pack(source)
+      else
+        output = @options[:output]
+        status.silent = @options[:silent]
+        pack_all_files_in_directory(source, output)
+      end
+    when :help
+      puts @parser
     else
-      output = options[:output]
-      status.silent = options[:silent]
-      pack_all_files_in_directory(source, output)
+      puts @parser
     end
   end
 end

@@ -18,5 +18,4 @@ Gem::Specification.new do |s|
   s.metadata                 = { 'issue_tracker' => 'https://github.com/coderemixer/rien/issues' }
   s.license                  = 'Apache-2.0'
   s.add_runtime_dependency     'ruby-progressbar', '~> 1.9'
-  s.add_runtime_dependency     'thor', '~> 1.0'
 end

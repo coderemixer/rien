@@ -2,4 +2,4 @@
 
 require "rien"
 
-Rien::Cli.start
+Rien::Cli.new.start
