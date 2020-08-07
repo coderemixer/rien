@@ -87,12 +87,16 @@ module Rien::CliHelper
     end
   end
 
-  private def pack_all_files_in_directory(source, output)
+  private def try_to_copy_directory(source, output)
     begin
       FileUtils.cp_r "#{source}/.", output
     rescue Exception => e
       abort("\nFailed to access #{output}, reason: #{e.message}".red)
     end
+  end
+
+  private def pack_all_files_in_directory(source, output)
+    try_to_copy_directory(source, output)
     files = Dir["#{output}/**/*.rb"] # pack all files
     pack_files(files)
     puts "Successed to compile and pack #{source} into #{output}\ntotal #{files.length} file(s)".green
@@ -106,17 +110,19 @@ module Rien::CliHelper
       abort "\nFailed to load Rienfile, reason:\n#{e.message}".red
     end
 
-    begin
-      status.silent = Rien.config.silent
-      output = Rien.config.output_path
-      FileUtils.cp_r "#{source}/.", output
-      files = Rien.config.effective_paths
-      pack_files(files)
-      puts "Successed to compile and pack #{source} into #{output}\n" \
-           "using #{rienfile}\n" \
-           "total #{files.length} file(s)".green
-    end
+    status.silent = Rien.config.silent
+    output = Rien.config.output_path
+
+    try_to_copy_directory(source, output)
+
+    files = Rien.config.effective_paths
+    pack_files(files)
+
+    puts "Successed to compile and pack #{source} into #{output}\n" \
+         "using #{rienfile}\n" \
+         "total #{files.length} file(s)".green
   end
+
 end
 
 class Rien::Cli
