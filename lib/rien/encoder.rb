@@ -3,8 +3,8 @@ class Rien::Encoder
     @version = version
   end
 
-  def encode(str)
-    bytecode = RubyVM::InstructionSequence.compile(str, options: Rien::Const::COMPILE_OPTION)
+  def encode_file(filepath)
+    bytecode = RubyVM::InstructionSequence.compile_file(filepath, options: Rien::Const::COMPILE_OPTION)
     Zlib::Deflate.deflate(bytecode.to_binary)
   end
 
@@ -17,8 +17,4 @@ Rien::Decoder.eval("\#{__FILE__}.rbc")
     EOL
   end
 
-  def encode_file(filepath)
-    src = File.read(filepath)
-    self.encode(src)
-  end
 end
