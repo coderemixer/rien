@@ -1,3 +1,5 @@
+require 'tmpdir'
+
 module Rien::Configurable
   def self.included(base)
     base.extend ClassMethods
@@ -14,26 +16,27 @@ module Rien::Configurable
   end
 
   class Configuration
-    attr_accessor :includes, :excludes, :output_path, :silent
+    attr_accessor :includes, :excludes, :output, :tmpdir, :silent
 
     def initialize
-      @includes = ["**/*"] # include all paths by default
-      @output_path = "rien_output"
-      @silent = false
+      @includes = ["**/*"]             # include all paths by default
+      @output = "rien_output"          # final result
+      @tmpdir = "#{Dir.tmpdir}/rien"   # store intermediate results
+      @silent = false                  # see cli.rb wait_user_on_encoded
     end
 
     def effective_paths
-      temp_paths = [] # store ruby files and directories
-      effective_paths = [] # only ruby files to be compiled
+      temp_paths = []         # store ruby files and directories
+      effective_paths = []    # only ruby files to be compiled
 
       @includes.each do |path|
-        path = "#{output_path}/#{path}"
+        path = "./#{path}"
         temp_paths += Dir[path]
       end
 
       unless excludes.nil?
         @excludes.each do |path|
-          path = "#{output_path}/#{path}"
+          path = "./#{path}"
           temp_paths -= Dir[path]
         end
       end

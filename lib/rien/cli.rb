@@ -91,18 +91,39 @@ module Rien::CliHelper
     begin
       FileUtils.cp_r "#{source}/.", output
     rescue Exception => e
-      abort("\nFailed to access #{output}, reason: #{e.message}".red)
+      abort("\nFailed to copy #{source} to #{output}, reason: #{e.message}".red)
     end
   end
 
-  private def pack_all_files_in_directory(source, output)
-    try_to_copy_directory(source, output)
-    files = Dir["#{output}/**/*.rb"] # pack all files
+  private def try_to_move_directory(source, output)
+    begin
+      FileUtils.mv "#{source}", output
+    rescue Exception => e
+      abort("\nFailed to move #{source} to #{output}, reason: #{e.message}".red)
+    end
+  end
+
+  private def pack_all_files_in_directory(source, output, tmpdir)
+    # Copy to temp workspace
+    temp_workspace = "#{tmpdir}/#{Time.now.strftime("%Y%m%d%H%M%S")}"
+    try_to_copy_directory(source, temp_workspace)
+
+    # Change to temp workspace
+    source_dir = File.absolute_path(File.dirname(source))
+    Dir.chdir(temp_workspace)
+
+    # Encode
+    files = Dir["./**/*.rb"] # pack all files
     pack_files(files)
+
+    # Clean up
     puts "Successed to compile and pack #{source} into #{output}\ntotal #{files.length} file(s)".green
+    Dir.chdir(source_dir)
+    try_to_move_directory(temp_workspace, output)
   end
 
   private def use_rienfile_to_pack(source)
+    # Eval Rienfile
     begin
       rienfile = "#{source}/Rienfile"
       load rienfile
@@ -110,17 +131,29 @@ module Rien::CliHelper
       abort "\nFailed to load Rienfile, reason:\n#{e.message}".red
     end
 
+    # Configure
     status.silent = Rien.config.silent
-    output = Rien.config.output_path
+    output = Rien.config.output
+    tmpdir = Rien.config.tmpdir
 
-    try_to_copy_directory(source, output)
+    # Copy to temp workspace
+    temp_workspace = "#{tmpdir}/#{Time.now.strftime("%Y%m%d%H%M%S")}"
+    try_to_copy_directory(source, temp_workspace)
 
+    # Change to temp workspace
+    source_dir = File.absolute_path(File.dirname(source))
+    Dir.chdir(temp_workspace)
+
+    # Encode
     files = Rien.config.effective_paths
     pack_files(files)
 
+    # Clean up
     puts "Successed to compile and pack #{source} into #{output}\n" \
          "using #{rienfile}\n" \
          "total #{files.length} file(s)".green
+    Dir.chdir(source_dir)
+    try_to_move_directory(temp_workspace, output)
   end
 
 end
@@ -145,6 +178,7 @@ class Rien::Cli
         @options[:mode] = :pack
         @options[:file] = v
         @options[:output] ||= "rien_output"
+        @options[:tmpdir] ||= "/tmp/rien"
       end
 
       opts.on("-o", "--out [FILE/DIR]", "Indicate the output of the encoded file(s)", String) do |v|
@@ -157,6 +191,10 @@ class Rien::Cli
 
       opts.on("-s", "--silent-mode", "Suppress all prompts asking for user input", String) do
         @options[:silent] = true
+      end
+
+      opts.on("-t", "--tmpdir", "Suppress all prompts asking for user input", String) do |v|
+        @options[:tmpdir] = v
       end
     end
   end
@@ -179,8 +217,9 @@ class Rien::Cli
         use_rienfile_to_pack(source)
       else
         output = @options[:output]
+        tmpdir = @options[:tmpdir]
         status.silent = @options[:silent]
-        pack_all_files_in_directory(source, output)
+        pack_all_files_in_directory(source, output, tmpdir)
       end
     when :help
       puts @parser
