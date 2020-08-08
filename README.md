@@ -25,9 +25,9 @@ puts "Hello Rien"
 ```
 
 ```
-rien -e hello.rb -o encode.rb
+rien -e hello.rb -o encoded.rb
 
-ruby encode.rb # => Hello Rien
+ruby encoded.rb # => Hello Rien
 ```
 
 ## Pack Mode
