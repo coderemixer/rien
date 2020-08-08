@@ -193,7 +193,7 @@ class Rien::Cli
         @options[:silent] = true
       end
 
-      opts.on("-t", "--tmpdir", "Select a temp directory to store intermediate results", String) do |v|
+      opts.on("-t", "--tmpdir [DIR]", "Select a temp directory to store intermediate results", String) do |v|
         @options[:tmpdir] = v
       end
     end
