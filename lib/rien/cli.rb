@@ -193,7 +193,7 @@ class Rien::Cli
         @options[:silent] = true
       end
 
-      opts.on("-t", "--tmpdir", "Suppress all prompts asking for user input", String) do |v|
+      opts.on("-t", "--tmpdir", "Select a temp directory to store intermediate results", String) do |v|
         @options[:tmpdir] = v
       end
     end
