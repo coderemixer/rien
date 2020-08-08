@@ -3,8 +3,9 @@ class Rien::Encoder
     @version = version
   end
 
-  def encode_file(filepath)
-    bytecode = RubyVM::InstructionSequence.compile_file(filepath, options: Rien::Const::COMPILE_OPTION)
+  def encode_file(path)
+    # RubyVM::InstructionSequence.compile(source, __FILE__, relative_path, options)
+    bytecode = RubyVM::InstructionSequence.compile(File.read(path), path, path, options: Rien::Const::COMPILE_OPTION)
     Zlib::Deflate.deflate(bytecode.to_binary)
   end
 
