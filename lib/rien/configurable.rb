@@ -19,10 +19,10 @@ module Rien::Configurable
     attr_accessor :includes, :excludes, :output, :tmpdir, :silent
 
     def initialize
-      @includes = ["**/*"]             # include all paths by default
-      @output = "rien_output"          # final result
-      @tmpdir = "#{Dir.tmpdir}/rien"   # store intermediate results
-      @silent = false                  # see cli.rb wait_user_on_encoded
+      @includes = ["**/*"]                            # include all paths by default
+      @output = "rien_output"                         # final result
+      @tmpdir = File.expand_path("rien", Dir.tmpdir)  # store intermediate results
+      @silent = false                                 # see cli.rb wait_user_on_encoded
     end
 
     def effective_paths
