@@ -33,6 +33,9 @@ module Rien::CliHelper
     end
   end
 
+  # Notice:
+  # this path must be relative path, 
+  # or it would break after moving to another directory
   private def encode(path)
     wait_user_on_encoded(path)
 
@@ -89,7 +92,7 @@ module Rien::CliHelper
 
   private def copy_dir(source, output)
     FileUtils.mkdir_p output
-    FileUtils.cp_r "#{source}/.", output
+    FileUtils.cp_r File.join(source, "."), output
   rescue Exception => e
     abort("\nFailed to copy #{source} to #{output}, reason: #{e.message}".red)
   end
@@ -102,7 +105,8 @@ module Rien::CliHelper
 
   private def pack_all_files_in_directory(source, output, tmpdir)
     # Copy to temp workspace
-    temp_workspace = "#{tmpdir}/#{Time.now.strftime("%Y%m%d%H%M%S")}"
+    time_stamp = Time.now.strftime("%Y%m%d%H%M%S")
+    temp_workspace = File.expand_path(time_stamp, tmpdir)
     copy_dir(source, temp_workspace)
 
     # Change to temp workspace
@@ -122,7 +126,7 @@ module Rien::CliHelper
   private def use_rienfile_to_pack(source)
     # Eval Rienfile
     begin
-      rienfile = "#{source}/Rienfile"
+      rienfile = File.expand_path("Rienfile", source)
       load rienfile
     rescue Exception => e
       abort "\nFailed to load Rienfile, reason:\n#{e.message}".red
@@ -134,7 +138,8 @@ module Rien::CliHelper
     tmpdir = Rien.config.tmpdir
 
     # Copy to temp workspace
-    temp_workspace = "#{tmpdir}/#{Time.now.strftime("%Y%m%d%H%M%S")}"
+    time_stamp = Time.now.strftime("%Y%m%d%H%M%S")
+    temp_workspace = File.expand_path(time_stamp, tmpdir)
     copy_dir(source, temp_workspace)
 
     # Change to temp workspace
@@ -202,19 +207,22 @@ class Rien::Cli
       source = @options[:file]
       output = @options[:output]
       status.silent = @options[:silent]
+
       export_single_encoded(source, output)
+
       puts "Successed to compile #{source} into #{output} and #{output}.rbc".green
     when :pack
       source = @options[:file]
       abort("\nOnly directory can be packed".red) unless File.directory?(source)
 
       use_rienfile = @options[:rienfile]
-      if use_rienfile
+      if use_rienfile # Ignore other options from CLI
         use_rienfile_to_pack(source)
-      else
+      else            # Use options from CLI
         output = @options[:output]
         tmpdir = @options[:tmpdir]
         status.silent = @options[:silent]
+
         pack_all_files_in_directory(source, output, tmpdir)
       end
     when :help
