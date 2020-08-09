@@ -33,7 +33,7 @@ module Rien::CliHelper
     end
   end
 
-  private def try_to_encode(path)
+  private def encode(path)
     wait_user_on_encoded(path)
 
     begin
@@ -46,7 +46,7 @@ module Rien::CliHelper
   end
 
   private def export_single_encoded(source, output)
-    bytes = try_to_encode(source)
+    bytes = encode(source)
 
     File.open("#{output}.rbc", "wb") do |f|
       f.write bytes
@@ -58,7 +58,7 @@ module Rien::CliHelper
   end
 
   private def replace_with_encoded(path)
-    bytes = try_to_encode(path)
+    bytes = encode(path)
 
     # Write encoded file
     File.open("#{path}.rbc", "wb") do |f|
@@ -87,26 +87,23 @@ module Rien::CliHelper
     end
   end
 
-  private def try_to_copy_directory(source, output)
-    begin
-      FileUtils.cp_r "#{source}/.", output
-    rescue Exception => e
-      abort("\nFailed to copy #{source} to #{output}, reason: #{e.message}".red)
-    end
+  private def copy_dir(source, output)
+    FileUtils.mkdir_p output
+    FileUtils.cp_r "#{source}/.", output
+  rescue Exception => e
+    abort("\nFailed to copy #{source} to #{output}, reason: #{e.message}".red)
   end
 
-  private def try_to_move_directory(source, output)
-    begin
-      FileUtils.mv "#{source}", output
-    rescue Exception => e
-      abort("\nFailed to move #{source} to #{output}, reason: #{e.message}".red)
-    end
+  private def move_dir(source, output)
+    FileUtils.mv "#{source}", output
+  rescue Exception => e
+    abort("\nFailed to move #{source} to #{output}, reason: #{e.message}".red)
   end
 
   private def pack_all_files_in_directory(source, output, tmpdir)
     # Copy to temp workspace
     temp_workspace = "#{tmpdir}/#{Time.now.strftime("%Y%m%d%H%M%S")}"
-    try_to_copy_directory(source, temp_workspace)
+    copy_dir(source, temp_workspace)
 
     # Change to temp workspace
     source_dir = File.absolute_path(File.dirname(source))
@@ -119,7 +116,7 @@ module Rien::CliHelper
     # Clean up
     puts "Successed to compile and pack #{source} into #{output}\ntotal #{files.length} file(s)".green
     Dir.chdir(source_dir)
-    try_to_move_directory(temp_workspace, output)
+    move_dir(temp_workspace, output)
   end
 
   private def use_rienfile_to_pack(source)
@@ -138,7 +135,7 @@ module Rien::CliHelper
 
     # Copy to temp workspace
     temp_workspace = "#{tmpdir}/#{Time.now.strftime("%Y%m%d%H%M%S")}"
-    try_to_copy_directory(source, temp_workspace)
+    copy_dir(source, temp_workspace)
 
     # Change to temp workspace
     source_dir = File.absolute_path(File.dirname(source))
@@ -153,9 +150,8 @@ module Rien::CliHelper
          "using #{rienfile}\n" \
          "total #{files.length} file(s)".green
     Dir.chdir(source_dir)
-    try_to_move_directory(temp_workspace, output)
+    move_dir(temp_workspace, output)
   end
-
 end
 
 class Rien::Cli
