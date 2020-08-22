@@ -1,4 +1,4 @@
-require './lib/rien'
+require './lib/rien/version'
 
 Gem::Specification.new do |s|
   s.name        = 'rien'
@@ -26,4 +26,7 @@ Gem::Specification.new do |s|
   }
 
   s.add_runtime_dependency 'ruby-progressbar', '~> 1.9'
+  s.add_development_dependency 'rake', '~> 13.0.1'
+  s.add_development_dependency 'minitest', '~> 5.14.1'
+  s.add_development_dependency 'ci_reporter_minitest'
 end
