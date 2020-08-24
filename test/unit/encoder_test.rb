@@ -20,12 +20,6 @@ class EncoderTest < Minitest::Test
     refute(binary.nil?)
   end
 
-  def test_encode_class
-    source = 'test/tmp/class.rb'
-    binary = encoder.encode_file(source)
-    refute(binary.nil?)
-  end
-
   def test_reject_not_ruby_file
     source = 'test/tmp/not_ruby.rb'
     assert_raises(Exception){encoder.encode_file(source)}

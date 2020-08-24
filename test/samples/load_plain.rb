@@ -1,1 +1,1 @@
-load("plain.rb")
+load("test/samples/plain.rb")

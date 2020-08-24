@@ -64,5 +64,54 @@ class CliHelperTest < Minitest::Test
     assert_equal(expected, result)
   end
 
-  #TODO: Add more tests
+  def test_decode_require_relative_plain
+    source = 'test/tmp/require_relative_plain.rb'
+    expected = `ruby #{source}`
+
+    replace_with_encoded(source)
+    result = `ruby #{source}`
+
+    assert_equal(expected, result)
+  end
+
+  def test_decode_read_eval_plain
+    source = 'test/tmp/read_eval_plain.rb'
+    expected = `ruby #{source}`
+
+    replace_with_encoded(source)
+    result = `ruby #{source}`
+
+    assert_equal(expected, result)
+  end
+
+  def test_decode_load_plain
+    source = 'test/tmp/load_plain.rb'
+    expected = `ruby #{source}`
+
+    replace_with_encoded(source)
+    result = `ruby #{source}`
+
+    assert_equal(expected, result)
+  end
+
+  def test_decode_require_gem
+    source = 'test/tmp/require_gem.rb'
+    expected = `ruby #{source}`
+
+    replace_with_encoded(source)
+    result = `ruby #{source}`
+
+    assert_equal(expected, result)
+  end
+
+  def test_decode_autoload_gem
+    source = 'test/tmp/autoload_gem.rb'
+    expected = `ruby #{source}`
+
+    replace_with_encoded(source)
+    result = `ruby #{source}`
+
+    assert_equal(expected, result)
+  end
+
 end
