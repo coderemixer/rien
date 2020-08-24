@@ -2,10 +2,6 @@
 
 Ruby IR Encoding Gem (Experimental)
 
-| kowalski/dev |
-|--|
-| [![Build Status](https://tfsprodea1.visualstudio.com/A88654f8b-8a84-4a4e-af4a-7985d5cbefca/rien/_apis/build/status/DarkKowalski.rien?branchName=kowalski%2Fdev)](https://tfsprodea1.visualstudio.com/A88654f8b-8a84-4a4e-af4a-7985d5cbefca/rien/_build/latest?definitionId=2&branchName=kowalski%2Fdev)  |
-
 # Example
 
 ```
