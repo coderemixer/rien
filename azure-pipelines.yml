@@ -1,0 +1,21 @@
+pool:
+    vmImage: 'Ubuntu 20.04'
+  
+steps:
+- task: UseRubyVersion@0
+  inputs:
+    versionSpec: '>= 2.7.1'
+  
+- script: |
+    gem install bundler
+    bundle install --retry=3 --jobs=4
+  displayName: 'bundle install'
+  
+- script: bundle exec rake
+  displayName: 'bundle exec rake'
+  
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFiles: '**/reports/TEST-*.xml'
+    testRunTitle: 'Rien Minitest'

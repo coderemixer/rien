@@ -34,7 +34,7 @@ module Rien::CliHelper
   end
 
   # Notice:
-  # this path must be relative path, 
+  # this path must be relative path,
   # or it would break after moving to another directory
   private def encode(path)
     wait_user_on_encoded(path)
@@ -110,16 +110,14 @@ module Rien::CliHelper
     copy_dir(source, temp_workspace)
 
     # Change to temp workspace
-    source_dir = File.absolute_path(File.dirname(source))
-    Dir.chdir(temp_workspace)
-
-    # Encode
-    files = Dir["./**/*.rb"] # pack all files
-    pack_files(files)
+    Dir.chdir(temp_workspace) do
+      # Encode
+      files = Dir["./**/*.rb"] # pack all files
+      pack_files(files)
+      puts "Successed to compile and pack #{source} into #{output}\ntotal #{files.length} file(s)".green
+    end
 
     # Clean up
-    puts "Successed to compile and pack #{source} into #{output}\ntotal #{files.length} file(s)".green
-    Dir.chdir(source_dir)
     move_dir(temp_workspace, output)
   end
 
@@ -218,7 +216,7 @@ class Rien::Cli
       use_rienfile = @options[:rienfile]
       if use_rienfile # Ignore other options from CLI
         use_rienfile_to_pack(source)
-      else            # Use options from CLI
+      else # Use options from CLI
         output = @options[:output]
         tmpdir = @options[:tmpdir]
         status.silent = @options[:silent]
