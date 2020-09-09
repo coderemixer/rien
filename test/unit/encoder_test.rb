@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class EncoderTest < Minitest::Test
@@ -22,6 +24,6 @@ class EncoderTest < Minitest::Test
 
   def test_reject_not_ruby_file
     source = 'test/tmp/not_ruby.rb'
-    assert_raises(Exception){encoder.encode_file(source)}
+    assert_raises(Exception) { encoder.encode_file(source) }
   end
 end

@@ -1,0 +1,5 @@
+Rien.configure do |config|
+  config.includes = ["**/*.rb"]
+  config.excludes = ["exclude.rb"]
+  config.output = "test/tmp/rienfile/output"
+end
