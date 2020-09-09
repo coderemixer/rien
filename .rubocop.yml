@@ -1,0 +1,31 @@
+AllCops:
+  RubyInterpreters:
+    - ruby
+  TargetRubyVersion: 2.7
+
+  Include:
+    - '**/*.rb'
+    - '**/*.gemspec'
+    - '**/Gemfile'
+    - '**/Rakefile'
+  Exclude:
+    - '.git/**/*'
+    - 'test/samples/**/*'
+
+  DefaultFormatter: clang
+  DisplayCopNames: true
+
+  NewCops: enable
+  UseCache: true
+  MaxFilesInCache: 20000
+  CacheRootDirectory: ~
+
+Style/Documentation:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/ModuleLength:
+  Enabled: false
