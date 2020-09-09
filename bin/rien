@@ -1,5 +1,6 @@
 #!/bin/ruby
+# frozen_string_literal: true
 
-require "rien"
+require 'rien'
 
 Rien::Cli.new.start

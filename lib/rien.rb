@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'zlib'
 
 require_relative 'rien/core_ext/string'
