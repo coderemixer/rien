@@ -1,232 +1,239 @@
-require "optparse"
-require "ruby-progressbar"
-require "fileutils"
+# frozen_string_literal: true
 
-module Rien::CliHelper
-  class CliHelperStatus
-    attr_accessor :silent
+require 'optparse'
+require 'ruby-progressbar'
+require 'fileutils'
 
-    def initialize
-      @silent = false
-    end
-  end
+module Rien
+  module CliHelper
+    class CliHelperStatus
+      attr_accessor :silent
 
-  private def status
-    @status ||= CliHelperStatus.new
-  end
-
-  private def encoder
-    @encoder ||= Rien::Encoder.new
-  end
-
-  private def wait_user_on_encoded(path)
-    if path.match(".rbc") && !status.silent
-      print "\n#{path} maybe have already been encoded, continue? (a/y/n) ".yellow
-      user_input = STDIN.gets.chomp.downcase
-      if user_input == "a"
-        status.silent = true # skip all warnings
-      elsif user_input == "y"
-        # ignore
-      else
-        abort("Manually abort".red)
+      def initialize
+        @silent = false
       end
     end
-  end
 
-  # Notice:
-  # this path must be relative path,
-  # or it would break after moving to another directory
-  private def encode(path)
-    wait_user_on_encoded(path)
+    private
 
-    begin
-      bytes = encoder.encode_file(path)
-    rescue Exception => e
-      abort "\nFailed to encode #{path}, reason:\n#{e.message}".red
+    def status
+      @status ||= CliHelperStatus.new
     end
 
-    bytes
-  end
-
-  private def export_single_encoded(source, output)
-    bytes = encode(source)
-
-    File.open("#{output}.rbc", "wb") do |f|
-      f.write bytes
+    def encoder
+      @encoder ||= Rien::Encoder.new
     end
 
-    File.open(output, "w") do |f|
-      f.write encoder.bootstrap
-    end
-  end
+    def wait_user_on_encoded(path)
+      return unless path.match('.rbc') && !status.silent
 
-  private def replace_with_encoded(path)
-    bytes = encode(path)
-
-    # Write encoded file
-    File.open("#{path}.rbc", "wb") do |f|
-      f.write bytes
-    end
-
-    # Replace file with bootstrap
-    FileUtils.rm(path)
-    File.open(path, "w") do |f|
-      f.write encoder.bootstrap
-    end
-  end
-
-  private def pack_files(paths)
-    progressbar = ProgressBar.create(:title => "Generating",
-                                     :starting_at => 0,
-                                     :length => 80,
-                                     :total => paths.length,
-                                     :smoothing => 0.6,
-                                     :format => "%t |%b>>%i| %p%% %a")
-
-    paths.each do |path|
-      progressbar.log("Compiling: #{path}")
-      replace_with_encoded(path) # Wirte encoded file and replace the orginal ruby source file with bootstrap
-      progressbar.increment
-    end
-  end
-
-  private def copy_dir(source, output)
-    FileUtils.mkdir_p output
-    FileUtils.cp_r File.join(source, "."), output
-  rescue Exception => e
-    abort("\nFailed to copy #{source} to #{output}, reason: #{e.message}".red)
-  end
-
-  private def move_dir(source, output)
-    FileUtils.mv "#{source}", output
-  rescue Exception => e
-    abort("\nFailed to move #{source} to #{output}, reason: #{e.message}".red)
-  end
-
-  private def pack_all_files_in_directory(source, output, tmpdir)
-    # Copy to temp workspace
-    time_stamp = Time.now.strftime("%Y%m%d%H%M%S")
-    temp_workspace = File.expand_path(time_stamp, tmpdir)
-    copy_dir(source, temp_workspace)
-
-    # Change to temp workspace
-    Dir.chdir(temp_workspace) do
-      # Encode
-      files = Dir["./**/*.rb"] # pack all files
-      pack_files(files)
-      puts "Successed to compile and pack #{source} into #{output}\ntotal #{files.length} file(s)".green
+      print "\n#{path} maybe have already been encoded, continue? (a/y/n) ".yellow
+      user_input = $stdin.gets.chomp.downcase
+      case user_input
+      when 'a'
+        status.silent = true # skip all warnings
+      when 'y'
+      # ignore
+      else
+        abort('Manually abort'.red)
+      end
     end
 
-    # Clean up
-    move_dir(temp_workspace, output)
-  end
+    # Notice:
+    # this path must be relative path,
+    # or it would break after moving to another directory
+    def encode(path)
+      wait_user_on_encoded(path)
 
-  private def use_rienfile_to_pack(source)
-    # Eval Rienfile
-    begin
-      rienfile = File.expand_path("Rienfile", source)
-      load rienfile
-    rescue Exception => e
-      abort "\nFailed to load Rienfile, reason:\n#{e.message}".red
+      begin
+        bytes = encoder.encode_file(path)
+      rescue SyntaxError => e
+        abort "\nFailed to encode #{path}, reason:\n#{e.message}".red
+      end
+
+      bytes
     end
 
-    # Configure
-    status.silent = Rien.config.silent
-    output = Rien.config.output
-    tmpdir = Rien.config.tmpdir
+    def export_single_encoded(source, output)
+      bytes = encode(source)
 
-    # Copy to temp workspace
-    time_stamp = Time.now.strftime("%Y%m%d%H%M%S")
-    temp_workspace = File.expand_path(time_stamp, tmpdir)
-    copy_dir(source, temp_workspace)
+      File.open("#{output}.rbc", 'wb') do |f|
+        f.write bytes
+      end
 
-    # Change to temp workspace
-    source_dir = File.absolute_path(File.dirname(source))
-    Dir.chdir(temp_workspace)
+      File.open(output, 'w') do |f|
+        f.write encoder.bootstrap
+      end
+    end
 
-    # Encode
-    files = Rien.config.effective_paths
-    pack_files(files)
+    def replace_with_encoded(path)
+      bytes = encode(path)
 
-    # Clean up
-    puts "Successed to compile and pack #{source} into #{output}\n" \
-         "using #{rienfile}\n" \
-         "total #{files.length} file(s)".green
-    Dir.chdir(source_dir)
-    move_dir(temp_workspace, output)
+      # Write encoded file
+      File.open("#{path}.rbc", 'wb') do |f|
+        f.write bytes
+      end
+
+      # Replace file with bootstrap
+      FileUtils.rm(path)
+      File.open(path, 'w') do |f|
+        f.write encoder.bootstrap
+      end
+    end
+
+    def pack_files(paths)
+      progressbar = ProgressBar.create(title: 'Generating',
+                                       starting_at: 0,
+                                       length: 80,
+                                       total: paths.length,
+                                       smoothing: 0.6,
+                                       format: '%t |%b>>%i| %p%% %a')
+
+      paths.each do |path|
+        progressbar.log("Compiling: #{path}")
+        replace_with_encoded(path) # Wirte encoded file and replace the orginal ruby source file with bootstrap
+        progressbar.increment
+      end
+    end
+
+    def copy_dir(source, output)
+      FileUtils.mkdir_p output
+      FileUtils.cp_r File.join(source, '.'), output
+    rescue IOError => e
+      abort("\nFailed to copy #{source} to #{output}, reason: #{e.message}".red)
+    end
+
+    def move_dir(source, output)
+      FileUtils.mv source.to_s, output
+    rescue IOError => e
+      abort("\nFailed to move #{source} to #{output}, reason: #{e.message}".red)
+    end
+
+    def pack_all_files_in_directory(source, output, tmpdir)
+      # Copy to temp workspace
+      time_stamp = Time.now.strftime('%Y%m%d%H%M%S')
+      temp_workspace = File.expand_path(time_stamp, tmpdir)
+      copy_dir(source, temp_workspace)
+
+      # Change to temp workspace
+      Dir.chdir(temp_workspace) do
+        # Encode
+        files = Dir['./**/*.rb'] # pack all files
+        pack_files(files)
+        puts "Successed to compile and pack #{source} into #{output}\ntotal #{files.length} file(s)".green
+      end
+
+      # Clean up
+      move_dir(temp_workspace, output)
+    end
+
+    def use_rienfile_to_pack(source)
+      # Eval Rienfile
+      begin
+        rienfile = File.expand_path('Rienfile', source)
+        load rienfile
+      rescue LoadError => e
+        abort "\nFailed to load Rienfile, reason:\n#{e.message}".red
+      end
+
+      # Configure
+      status.silent = Rien.config.silent
+      output = Rien.config.output
+      tmpdir = Rien.config.tmpdir
+
+      # Copy to temp workspace
+      time_stamp = Time.now.strftime('%Y%m%d%H%M%S')
+      temp_workspace = File.expand_path(time_stamp, tmpdir)
+      copy_dir(source, temp_workspace)
+
+      # Change to temp workspace
+      Dir.chdir(temp_workspace) do
+        # Encode
+        files = Rien.config.effective_paths
+        pack_files(files)
+
+        puts "Successed to compile and pack #{source} into #{output}\n" \
+             "using #{rienfile}\n" \
+             "total #{files.length} file(s)".green
+      end
+
+      move_dir(temp_workspace, output)
+    end
   end
 end
 
-class Rien::Cli
-  include Rien::CliHelper
+module Rien
+  class Cli
+    include Rien::CliHelper
 
-  def initialize
-    @options = {
-      mode: :help,
-    }
+    def initialize
+      @options = {
+        mode: :help
+      }
 
-    @parser = OptionParser.new do |opts|
-      opts.banner = "Usage: rien [options]"
-      opts.on("-e", "--encode [FILE]", "Encode specific ruby file", String) do |v|
-        @options[:mode] = :encode
-        @options[:file] = v
-        @options[:output] ||= "output.rb"
-      end
+      @parser = OptionParser.new do |opts|
+        opts.banner = 'Usage: rien [options]'
+        opts.on('-e', '--encode [FILE]', 'Encode specific ruby file', String) do |v|
+          @options[:mode] = :encode
+          @options[:file] = v
+          @options[:output] ||= 'output.rb'
+        end
 
-      opts.on("-p", "--pack [DIR]", "Pack ruby directory into encoded files", String) do |v|
-        @options[:mode] = :pack
-        @options[:file] = v
-        @options[:output] ||= "rien_output"
-        @options[:tmpdir] ||= "/tmp/rien"
-      end
+        opts.on('-p', '--pack [DIR]', 'Pack ruby directory into encoded files', String) do |v|
+          @options[:mode] = :pack
+          @options[:file] = v
+          @options[:output] ||= 'rien_output'
+          @options[:tmpdir] ||= '/tmp/rien'
+        end
 
-      opts.on("-o", "--out [FILE/DIR]", "Indicate the output of the encoded file(s)", String) do |v|
-        @options[:output] = v
-      end
+        opts.on('-o', '--out [FILE/DIR]', 'Indicate the output of the encoded file(s)', String) do |v|
+          @options[:output] = v
+        end
 
-      opts.on("-u", "--use-rienfile", "Use Rienfile to configure, override other options", String) do
-        @options[:rienfile] = true
-      end
+        opts.on('-u', '--use-rienfile', 'Use Rienfile to configure, override other options', String) do
+          @options[:rienfile] = true
+        end
 
-      opts.on("-s", "--silent-mode", "Suppress all prompts asking for user input", String) do
-        @options[:silent] = true
-      end
+        opts.on('-s', '--silent-mode', 'Suppress all prompts asking for user input', String) do
+          @options[:silent] = true
+        end
 
-      opts.on("-t", "--tmpdir [DIR]", "Select a temp directory to store intermediate results", String) do |v|
-        @options[:tmpdir] = v
+        opts.on('-t', '--tmpdir [DIR]', 'Select a temp directory to store intermediate results', String) do |v|
+          @options[:tmpdir] = v
+        end
       end
     end
-  end
 
-  def start
-    @parser.parse!
-    case @options[:mode]
-    when :encode
-      source = @options[:file]
-      output = @options[:output]
-      status.silent = @options[:silent]
-
-      export_single_encoded(source, output)
-
-      puts "Successed to compile #{source} into #{output} and #{output}.rbc".green
-    when :pack
-      source = @options[:file]
-      abort("\nOnly directory can be packed".red) unless File.directory?(source)
-
-      use_rienfile = @options[:rienfile]
-      if use_rienfile # Ignore other options from CLI
-        use_rienfile_to_pack(source)
-      else # Use options from CLI
+    def start
+      @parser.parse!
+      case @options[:mode]
+      when :encode
+        source = @options[:file]
         output = @options[:output]
-        tmpdir = @options[:tmpdir]
         status.silent = @options[:silent]
 
-        pack_all_files_in_directory(source, output, tmpdir)
+        export_single_encoded(source, output)
+
+        puts "Successed to compile #{source} into #{output} and #{output}.rbc".green
+      when :pack
+        source = @options[:file]
+        abort("\nOnly directory can be packed".red) unless File.directory?(source)
+
+        use_rienfile = @options[:rienfile]
+        if use_rienfile # Ignore other options from CLI
+          use_rienfile_to_pack(source)
+        else # Use options from CLI
+          output = @options[:output]
+          tmpdir = @options[:tmpdir]
+          status.silent = @options[:silent]
+
+          pack_all_files_in_directory(source, output, tmpdir)
+        end
+      when :help
+        puts @parser
+      else
+        puts @parser
       end
-    when :help
-      puts @parser
-    else
-      puts @parser
     end
   end
 end
