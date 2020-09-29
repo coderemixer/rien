@@ -2,6 +2,8 @@
 
 Ruby IR Encoding Gem (Experimental)
 
+[![Build Status](https://dev.azure.com/dsh0416/rien/_apis/build/status/coderemixer.rien?branchName=master)](https://dev.azure.com/dsh0416/rien/_build/latest?definitionId=1&branchName=master)
+
 # Example
 
 ```
