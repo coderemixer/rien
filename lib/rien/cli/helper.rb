@@ -194,6 +194,7 @@ module Rien
           pack_files(files, mode: :plain)
         end
 
+        FileUtils.rm './Rienfile' # under tmpdir
         msg = <<~MSG
           Successed to compile and pack #{source} into #{output}
           using #{rienfile}
