@@ -2,12 +2,13 @@
 
 Ruby IR Encoding Gem (Experimental)
 
-[![Build Status](https://dev.azure.com/dsh0416/rien/_apis/build/status/coderemixer.rien?branchName=master)](https://dev.azure.com/dsh0416/rien/_build/latest?definitionId=1&branchName=master)
+[![CI Tests](https://github.com/coderemixer/rien/workflows/CI%20Tests/badge.svg)](https://github.com/coderemixer/rien/actions?query=workflow%3A%22CI+Tests%22)
 
 # Example
 
 ```
 Usage: rien [options]
+    -v, --version                    Show current version
     -e, --encode [FILE]              Encode specific ruby file
     -p, --pack [DIR]                 Pack ruby directory into encoded files
     -o, --out [FILE/DIR]             Indicate the output of the encoded file(s)
@@ -71,6 +72,14 @@ Rien.configure do |config|
     # aka. /tmp/rien for linux
     config.tmpdir = "tmpdir/rien"
 
+    # Ruar: https://github.com/DarkKowalski/ruar
+    # [Optional] Ruar mode
+    config.ruar = true
+    # Set key/iv or use generated ones
+    config.ruar_key = Base64.encode64(your_key_binary)
+    config.ruar_iv = Base64.encode64(your_iv_binary)
+    # You must set auth data
+    config.ruar_auth_data = Base64.encode64(your_auth_data)
 end
 ```
 
