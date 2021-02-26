@@ -30,4 +30,4 @@ jobs:
           gem install bundler
           bundle install --jobs 4 --retry 3
       - name: Test
-        run: rake test
+        run: bundle exec rake test
