@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'test_helper'
 
 class CliHelperTest < Minitest::Test
@@ -21,7 +23,7 @@ class CliHelperTest < Minitest::Test
 
   def test_reject_not_ruby_file
     source = 'test/tmp/not_ruby.rb'
-    assert_raises(SystemExit){encode(source)}
+    assert_raises(Rien::Error::FailedToEncode) { encode(source) }
   end
 
   def test_export_single_encoded_plain
@@ -113,5 +115,4 @@ class CliHelperTest < Minitest::Test
 
     assert_equal(expected, result)
   end
-
 end

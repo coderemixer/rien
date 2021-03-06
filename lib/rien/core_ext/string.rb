@@ -1,5 +1,8 @@
+# frozen_string_literal: true
+
 class String
-  def colorize(color_code) # ANSI color code
+  # ANSI color code
+  def colorize(color_code)
     "\e[#{color_code}m#{self}\e[0m"
   end
 

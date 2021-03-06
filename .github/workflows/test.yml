@@ -1,0 +1,33 @@
+name: CI Tests
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - dev
+  schedule:
+    - cron: "0 7 * * SUN"
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-20.04, ruby: "3.0" }
+          - { os: macos-10.15, ruby: "3.0" }
+          - { os: windows-2019, ruby: "3.0" }
+    name: test ${{ matrix.os }} ${{ matrix.ruby }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@master
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: false
+      - name: Install Dependencies
+        run: |
+          gem install bundler
+          bundle install --jobs 4 --retry 3
+      - name: Test
+        run: bundle exec rake test
